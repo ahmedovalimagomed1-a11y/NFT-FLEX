@@ -22,13 +22,12 @@ import {
 const api = new Hono<AppEnv>();
 api.get('/health', (c) => c.json({ ok: true, name: 'NFT FLEX', time: now() }));
 api.post('/public/auth-diag', async (c) => {
-  const body = await readJson<{ href?: string; stage?: string }>(c.req.raw);
+  const body = await readJson<Record<string, unknown>>(c.req.raw);
   const initData = c.req.header('X-Telegram-Init-Data') ?? '';
   const diagnostics = await diagnoseInitData(initData, c.env.TELEGRAM_BOT_TOKEN ?? '');
   await logEvent(c.env.DB, diagnostics.userId, 'auth_diag', {
     ...diagnostics,
-    stage: String(body?.stage ?? '').slice(0, 80),
-    href: String(body?.href ?? '').slice(0, 500),
+    client: body ?? {},
     userAgent: (c.req.header('user-agent') ?? '').slice(0, 300),
   });
   return c.json({ ok: true, data: diagnostics });

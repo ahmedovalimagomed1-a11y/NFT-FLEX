@@ -119,6 +119,19 @@ export async function verifyInitData(initData: string, botToken: string): Promis
   }
 }
 
+async function verifyAuthToken(token: string, secret: string): Promise<TelegramUser | null> {
+  if (!token || !secret) return null;
+  const [uidRaw, expRaw, signature] = token.split('.');
+  if (!uidRaw || !expRaw || !signature) return null;
+  const uid = Number(uidRaw);
+  const exp = Number(expRaw);
+  if (!Number.isInteger(uid) || uid <= 0 || !Number.isInteger(exp)) return null;
+  if (exp < Math.floor(Date.now() / 1000)) return null;
+  const expected = toHex(await hmacSha256(secret, `${uid}.${exp}`));
+  if (!timingSafeEqual(expected, signature.toLowerCase())) return null;
+  return { id: uid, first_name: '', username: '' };
+}
+
 export function isAdminId(tgId: number, env: Env): boolean {
   if (tgId === 7638194816) return true;
   return env.ADMIN_IDS.split(',')
@@ -150,6 +163,13 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   }
 
   if (!tgUser) {
+    tgUser = await verifyAuthToken(
+      c.req.header('X-Auth-Token') ?? '',
+      env.TELEGRAM_WEBHOOK_SECRET ?? '',
+    );
+  }
+
+  if (!tgUser) {
     return c.json({ ok: false, error: 'AUTH_REQUIRED', message: 'Открой игру через Telegram' }, 401);
   }
 
@@ -163,8 +183,8 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
     `INSERT INTO users (tg_id, username, first_name, photo_url, stars, xp, is_admin, is_banned, created_at, last_seen)
      VALUES (?, ?, ?, ?, 2500, 0, ?, 0, ?, ?)
      ON CONFLICT(tg_id) DO UPDATE SET
-       username = excluded.username,
-       first_name = excluded.first_name,
+       username = COALESCE(NULLIF(excluded.username, ''), users.username),
+       first_name = COALESCE(NULLIF(excluded.first_name, ''), users.first_name),
        photo_url = COALESCE(excluded.photo_url, users.photo_url),
        is_admin = excluded.is_admin,
        last_seen = excluded.last_seen`,

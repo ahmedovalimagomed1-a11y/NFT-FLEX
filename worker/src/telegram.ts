@@ -4,9 +4,32 @@ import type { Env } from './types';
 type Bindings = { Bindings: Env };
 const telegram = new Hono<Bindings>();
 
-function appUrl(env: Env): string {
+const encoder = new TextEncoder();
+
+function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function signAuthToken(env: Env, userId: number): Promise<string | null> {
+  if (!env.TELEGRAM_WEBHOOK_SECRET || !userId) return null;
+  const exp = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+  const payload = `${userId}.${exp}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(env.TELEGRAM_WEBHOOK_SECRET),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
+  return `${payload}.${toHex(new Uint8Array(signature))}`;
+}
+
+async function appUrl(env: Env, userId?: number): Promise<string> {
   const url = new URL(env.WEBAPP_URL || 'https://nft-flex.workers.dev');
-  url.searchParams.set('v', '4');
+  url.searchParams.set('v', '5');
+  const token = userId ? await signAuthToken(env, userId) : null;
+  if (token) url.searchParams.set('t', token);
   return url.toString();
 }
 
@@ -25,16 +48,28 @@ async function sendMessage(env: Env, chatId: number, text: string, extra: Record
   });
 }
 
-function startKeyboard(env: Env) {
+async function startKeyboard(env: Env, userId: number) {
   return {
     inline_keyboard: [
-      [{ text: 'Играть', web_app: { url: appUrl(env) } }],
+      [{ text: 'Играть', web_app: { url: await appUrl(env, userId) } }],
       [
         { text: 'Мой профиль', callback_data: 'profile' },
         { text: 'Как играть', callback_data: 'help' },
       ],
     ],
   };
+}
+
+async function setChatMenu(env: Env, chatId: number) {
+  if (!env.TELEGRAM_BOT_TOKEN) return;
+  await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/setChatMenuButton`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      menu_button: { type: 'web_app', text: 'Играть', web_app: { url: await appUrl(env, chatId) } },
+    }),
+  }).catch(() => {});
 }
 
 telegram.post('/webhook', async (c) => {
@@ -62,6 +97,7 @@ telegram.post('/webhook', async (c) => {
     const text = update.message.text ?? '';
     const name = update.message.from?.first_name ?? 'игрок';
     if (text.startsWith('/start')) {
+      await setChatMenu(c.env, chatId);
       await sendMessage(
         c.env,
         chatId,
@@ -69,11 +105,11 @@ telegram.post('/webhook', async (c) => {
           `Привет, ${escapeHtml(name)}. Это твой цифровой флекс.\n\n` +
           `Открывай кейсы, собирай NFT, апгрейди их как в CS, запускай ракету, играй 50/50 и торгуй с другими игроками.\n\n` +
           `На старте — <b>2 500 звёзд</b>. Ежедневный бонус уже ждёт внутри.`,
-        { reply_markup: startKeyboard(c.env) },
+        { reply_markup: await startKeyboard(c.env, chatId) },
       );
     } else if (text.startsWith('/app')) {
       await sendMessage(c.env, chatId, '<b>NFT FLEX</b>\nТвоя коллекция уже загружается.', {
-        reply_markup: startKeyboard(c.env),
+        reply_markup: await startKeyboard(c.env, chatId),
       });
     } else if (text.startsWith('/help')) {
       await sendMessage(
@@ -86,11 +122,11 @@ telegram.post('/webhook', async (c) => {
           `4. Играй 50/50 в мини-играх и удваивай стоимость NFT.\n` +
           `5. Выставляй лоты на рынок и аукцион.\n\n` +
           `Валюта — звёзды. Админ — только владелец NFT FLEX.`,
-        { reply_markup: startKeyboard(c.env) },
+        { reply_markup: await startKeyboard(c.env, chatId) },
       );
     } else {
       await sendMessage(c.env, chatId, 'Открой приложение, чтобы продолжить флекс.', {
-        reply_markup: startKeyboard(c.env),
+        reply_markup: await startKeyboard(c.env, chatId),
       });
     }
   }
@@ -107,7 +143,7 @@ telegram.post('/webhook', async (c) => {
       await sendMessage(c.env, chatId, 'Открой NFT FLEX и выбери нужный раздел в нижнем меню.');
     } else {
       await sendMessage(c.env, chatId, 'Профиль доступен внутри приложения.', {
-        reply_markup: startKeyboard(c.env),
+        reply_markup: await startKeyboard(c.env, chatId),
       });
     }
   }

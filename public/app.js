@@ -2,7 +2,9 @@ const tg = window.Telegram?.WebApp;
 const launchHash = new URLSearchParams(location.hash.slice(1));
 const launchQuery = new URLSearchParams(location.search);
 const telegramInitData = tg?.initData || launchHash.get('tgWebAppData') || launchQuery.get('tgWebAppData') || sessionStorage.getItem('nftflex_init_data') || '';
+const authToken = launchQuery.get('t') || launchHash.get('t') || sessionStorage.getItem('nftflex_auth_token') || '';
 try { if (telegramInitData) sessionStorage.setItem('nftflex_init_data', telegramInitData); } catch {}
+try { if (authToken) sessionStorage.setItem('nftflex_auth_token', authToken); } catch {}
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -180,6 +182,7 @@ function burst(x, y, color = '#8b5cf6', count = 14) {
 function authHeaders() {
   const headers = { 'content-type': 'application/json' };
   if (telegramInitData) headers['X-Telegram-Init-Data'] = telegramInitData;
+  if (authToken) headers['X-Auth-Token'] = authToken;
   if (state.devUser) headers['X-Dev-User'] = state.devUser;
   return headers;
 }
@@ -205,11 +208,7 @@ async function api(path, options = {}) {
   if (response.status === 401) {
     if (!state.authDiagSent) {
       state.authDiagSent = true;
-      fetch('/api/public/auth-diag', {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify({ href: location.href, stage: path }),
-      }).catch(() => {});
+      sendAuthDiag(path);
     }
     showAuth();
     throw new ApiError(payload, 401);
@@ -224,6 +223,30 @@ function showAuth() {
   $('#splash')?.classList.add('gone');
   $('#app')?.setAttribute('hidden', '');
   $('#auth-screen')?.removeAttribute('hidden');
+  const debug = $('#auth-debug');
+  if (debug) {
+    debug.textContent = `build v5 · SDK: ${window.Telegram ? 'да' : 'нет'} · initData: ${telegramInitData.length} · token: ${authToken ? 'да' : 'нет'}`;
+  }
+}
+
+async function sendAuthDiag(stage) {
+  try {
+    await fetch('/api/public/auth-diag', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        stage,
+        href: location.href,
+        hasTelegram: Boolean(window.Telegram),
+        hasWebApp: Boolean(tg),
+        initDataLength: telegramInitData.length,
+        hasUrlToken: Boolean(authToken),
+        hashKeys: Array.from(launchHash.keys()),
+        searchKeys: Array.from(launchQuery.keys()),
+        hasStored: Boolean(sessionStorage.getItem('nftflex_init_data')),
+      }),
+    });
+  } catch {}
 }
 
 function initTelegram() {
@@ -246,7 +269,8 @@ async function boot() {
   initTelegram();
   $('#splash-status').textContent = 'Синхронизируем коллекцию';
   try {
-    if (!telegramInitData && !state.devUser) {
+    if (!telegramInitData && !authToken && !state.devUser) {
+      sendAuthDiag('no-initdata');
       await sleep(500);
       showAuth();
       return;
