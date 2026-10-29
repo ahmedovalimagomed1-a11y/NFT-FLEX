@@ -5,7 +5,9 @@ type Bindings = { Bindings: Env };
 const telegram = new Hono<Bindings>();
 
 function appUrl(env: Env): string {
-  return env.WEBAPP_URL || 'https://nft-flex.workers.dev';
+  const url = new URL(env.WEBAPP_URL || 'https://nft-flex.workers.dev');
+  url.searchParams.set('v', '3');
+  return url.toString();
 }
 
 async function sendMessage(env: Env, chatId: number, text: string, extra: Record<string, unknown> = {}) {

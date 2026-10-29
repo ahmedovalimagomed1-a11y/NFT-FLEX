@@ -31,28 +31,88 @@ function timingSafeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
-export async function verifyInitData(initData: string, botToken: string): Promise<TelegramUser | null> {
-  if (!initData || !botToken) return null;
-  const params = new URLSearchParams(initData);
-  const hash = params.get('hash');
-  const authDate = Number(params.get('auth_date') ?? 0);
-  const rawUser = params.get('user');
-  if (!hash || !rawUser || !authDate) return null;
-  if (Date.now() / 1000 - authDate > 60 * 60 * 24 * 2) return null;
+export type InitDataDiagnostics = {
+  hasInitData: boolean;
+  length: number;
+  keys: string[];
+  hasHash: boolean;
+  hasSignature: boolean;
+  authDate: number;
+  ageSeconds: number | null;
+  userId: number | null;
+  userParsed: boolean;
+  hashWithSignature: boolean;
+  hashWithoutSignature: boolean;
+  valid: boolean;
+};
 
-  const dataCheckString = Array.from(params.entries())
-    .filter(([key]) => key !== 'hash')
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('\n');
+export async function diagnoseInitData(initData: string, botToken: string): Promise<InitDataDiagnostics> {
+  const base: InitDataDiagnostics = {
+    hasInitData: Boolean(initData),
+    length: initData.length,
+    keys: [],
+    hasHash: false,
+    hasSignature: false,
+    authDate: 0,
+    ageSeconds: null,
+    userId: null,
+    userParsed: false,
+    hashWithSignature: false,
+    hashWithoutSignature: false,
+    valid: false,
+  };
+  if (!initData) return base;
+
+  const params = new URLSearchParams(initData);
+  const entries = Array.from(params.entries());
+  const hash = params.get('hash') ?? '';
+  const authDate = Number(params.get('auth_date') ?? 0);
+  const rawUser = params.get('user') ?? '';
+  base.keys = entries.map(([key]) => key).sort();
+  base.hasHash = Boolean(hash);
+  base.hasSignature = params.has('signature');
+  base.authDate = authDate;
+  base.ageSeconds = authDate ? Math.round(Date.now() / 1000 - authDate) : null;
+
+  let user: TelegramUser | null = null;
+  try {
+    user = JSON.parse(rawUser) as TelegramUser;
+    base.userParsed = Boolean(user && typeof user.id === 'number');
+    base.userId = base.userParsed ? user!.id : null;
+  } catch {}
+
+  if (!hash || !rawUser || !authDate || !botToken) return base;
+
+  const buildDataCheckString = (list: [string, string][]) =>
+    list
+      .filter(([key]) => key !== 'hash')
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
 
   const secret = await hmacSha256(botToken, 'WebAppData');
-  const expected = toHex(await hmacSha256(secret, dataCheckString));
-  if (!timingSafeEqual(expected, hash.toLowerCase())) return null;
+  const withSignature = toHex(await hmacSha256(secret, buildDataCheckString(entries)));
+  const withoutSignature = toHex(
+    await hmacSha256(
+      secret,
+      buildDataCheckString(entries.filter(([key]) => key !== 'signature')),
+    ),
+  );
+  const target = hash.toLowerCase();
+  base.hashWithSignature = timingSafeEqual(withSignature, target);
+  base.hashWithoutSignature = timingSafeEqual(withoutSignature, target);
+  base.valid =
+    Boolean(base.hashWithSignature || base.hashWithoutSignature) &&
+    Date.now() / 1000 - authDate <= 60 * 60 * 24 * 2 &&
+    Boolean(user && typeof user.id === 'number');
+  return base;
+}
 
+export async function verifyInitData(initData: string, botToken: string): Promise<TelegramUser | null> {
+  const diagnostics = await diagnoseInitData(initData, botToken);
+  if (!diagnostics.valid) return null;
   try {
-    const user = JSON.parse(rawUser) as TelegramUser;
-    if (!user || typeof user.id !== 'number') return null;
+    const user = JSON.parse(new URLSearchParams(initData).get('user') ?? '') as TelegramUser;
     return user;
   } catch {
     return null;

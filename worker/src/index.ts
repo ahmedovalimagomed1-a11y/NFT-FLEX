@@ -17,6 +17,12 @@ app.all('*', async (c) => {
     url.pathname = '/';
     return c.env.ASSETS.fetch(new Request(url.toString(), c.req.raw));
   }
+  const path = new URL(c.req.url).pathname;
+  if (path === '/' || path.endsWith('.html') || path.endsWith('.js') || path.endsWith('.css')) {
+    const headers = new Headers(response.headers);
+    headers.set('Cache-Control', 'no-store, max-age=0');
+    return new Response(response.body, { status: response.status, headers });
+  }
   return response;
 });
 

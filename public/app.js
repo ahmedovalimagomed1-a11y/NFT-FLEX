@@ -1,6 +1,7 @@
 const tg = window.Telegram?.WebApp;
 const launchHash = new URLSearchParams(location.hash.slice(1));
-const telegramInitData = tg?.initData || launchHash.get('tgWebAppData') || sessionStorage.getItem('nftflex_init_data') || '';
+const launchQuery = new URLSearchParams(location.search);
+const telegramInitData = tg?.initData || launchHash.get('tgWebAppData') || launchQuery.get('tgWebAppData') || sessionStorage.getItem('nftflex_init_data') || '';
 try { if (telegramInitData) sessionStorage.setItem('nftflex_init_data', telegramInitData); } catch {}
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -39,6 +40,7 @@ const state = {
   rocketFrame: null,
   rocketPoll: null,
   busy: false,
+  authDiagSent: false,
   settings: {
     sound: JSON.parse(localStorage.getItem('nftflex_sound') ?? 'true'),
     haptics: JSON.parse(localStorage.getItem('nftflex_haptics') ?? 'true'),
@@ -201,6 +203,14 @@ async function api(path, options = {}) {
     payload = await response.json();
   } catch {}
   if (response.status === 401) {
+    if (!state.authDiagSent) {
+      state.authDiagSent = true;
+      fetch('/api/public/auth-diag', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ href: location.href, stage: path }),
+      }).catch(() => {});
+    }
     showAuth();
     throw new ApiError(payload, 401);
   }

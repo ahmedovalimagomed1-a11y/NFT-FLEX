@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { ACHIEVEMENTS, CASES, CASE_BY_KEY, ITEMS, ITEM_BY_KEY, RARITIES, type CaseDef, type NftItem } from './catalog';
-import { isAdminId, requireAuth } from './auth';
+import { diagnoseInitData, isAdminId, requireAuth } from './auth';
 import type { AppEnv, AuctionRow, InventoryRow, ListingRow, RocketRow, UserRow } from './types';
 import {
   clamp,
@@ -21,6 +21,18 @@ import {
 
 const api = new Hono<AppEnv>();
 api.get('/health', (c) => c.json({ ok: true, name: 'NFT FLEX', time: now() }));
+api.post('/public/auth-diag', async (c) => {
+  const body = await readJson<{ href?: string; stage?: string }>(c.req.raw);
+  const initData = c.req.header('X-Telegram-Init-Data') ?? '';
+  const diagnostics = await diagnoseInitData(initData, c.env.TELEGRAM_BOT_TOKEN ?? '');
+  await logEvent(c.env.DB, diagnostics.userId, 'auth_diag', {
+    ...diagnostics,
+    stage: String(body?.stage ?? '').slice(0, 80),
+    href: String(body?.href ?? '').slice(0, 500),
+    userAgent: (c.req.header('user-agent') ?? '').slice(0, 300),
+  });
+  return c.json({ ok: true, data: diagnostics });
+});
 api.use('*', requireAuth);
 
 const ROCKET_RATE = 0.16;
