@@ -20,6 +20,7 @@ import {
 } from './util';
 
 const api = new Hono<AppEnv>();
+api.get('/health', (c) => c.json({ ok: true, name: 'NFT FLEX', time: now() }));
 api.use('*', requireAuth);
 
 const ROCKET_RATE = 0.16;
@@ -1187,7 +1188,5 @@ api.post('/admin/cleanup', async (c) => {
   await settleRockets(c.env.DB);
   return c.json({ ok: true });
 });
-
-api.get('/health', (c) => c.json({ ok: true, name: 'NFT FLEX', time: now() }));
 
 export default api;
