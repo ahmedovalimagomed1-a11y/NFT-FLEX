@@ -1,0 +1,23 @@
+name = "nft-flex"
+main = "worker/src/index.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/telegram/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nft-flex"
+database_id = "95c9ed3b-5a7b-40be-8757-b537fdb75c5d"
+migrations_dir = "migrations"
+
+[vars]
+BOT_USERNAME = "Nftflex_bot"
+ADMIN_IDS = "7638194816"
+WEBAPP_URL = "https://nft-flex.ahmedovalimagomed1.workers.dev"
+DEV_AUTH = "0"
+APP_ENV = "production"

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <defs>
+    <radialGradient id="bg" cx="48%" cy="34%" r="80%">
+      <stop offset="0" stop-color="#181a2b"/><stop offset=".55" stop-color="#0c0d17"/><stop offset="1" stop-color="#06070c"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#61cf8f" stop-opacity=".55"/><stop offset=".55" stop-color="#61cf8f" stop-opacity=".12"/><stop offset="1" stop-color="#61cf8f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".28" stop-color="#61cf8f"/><stop offset=".62" stop-color="#61cf8f" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".7"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".14"/><stop offset="1" stop-color="#ffffff" stop-opacity=".02"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#ffffff" stroke-opacity=".035" stroke-width="1"/>
+    </pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#61cf8f" stop-opacity=".65"/><stop offset=".5" stop-color="#ffffff" stop-opacity=".12"/><stop offset="1" stop-color="#61cf8f" stop-opacity=".3"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="480" rx="38" fill="url(#bg)"/>
+  <rect width="480" height="480" rx="38" fill="url(#grid)"/>
+  <ellipse cx="240" cy="244" rx="205" ry="198" fill="url(#halo)" filter="url(#soft)"/>
+  <ellipse cx="240" cy="385" rx="150" ry="28" fill="#000" opacity=".45" filter="url(#soft)"/>
+  <path d="M26 168 V48 a22 22 0 0 1 22-22 h120 M454 312 v120 a22 22 0 0 1-22 22 H312" fill="none" stroke="url(#edge)" stroke-width="2"/>
+  <circle cx="371" cy="177" r="1" fill="#61cf8f" opacity="0.12"/><circle cx="38" cy="224" r="2" fill="#61cf8f" opacity="0.2"/><circle cx="109" cy="271" r="3" fill="#61cf8f" opacity="0.28"/><circle cx="180" cy="318" r="1" fill="#61cf8f" opacity="0.36"/><circle cx="251" cy="365" r="2" fill="#61cf8f" opacity="0.12"/><circle cx="322" cy="57" r="3" fill="#61cf8f" opacity="0.2"/><circle cx="393" cy="104" r="1" fill="#61cf8f" opacity="0.28"/><circle cx="60" cy="151" r="2" fill="#61cf8f" opacity="0.36"/><circle cx="131" cy="198" r="3" fill="#61cf8f" opacity="0.12"/><circle cx="202" cy="245" r="1" fill="#61cf8f" opacity="0.2"/><circle cx="273" cy="292" r="2" fill="#61cf8f" opacity="0.28"/><circle cx="344" cy="339" r="3" fill="#61cf8f" opacity="0.36"/><circle cx="415" cy="386" r="1" fill="#61cf8f" opacity="0.12"/><circle cx="82" cy="78" r="2" fill="#61cf8f" opacity="0.2"/><circle cx="153" cy="125" r="3" fill="#61cf8f" opacity="0.28"/><circle cx="224" cy="172" r="1" fill="#61cf8f" opacity="0.36"/>
+  <g filter="url(#glow)"><path d="M156 306c4-56 22-102 70-122 28-12 66-8 84 16 12 17 8 38-8 49-17 12-38 4-51-10-11 35-36 56-78 66z" fill="url(#metal)"/><circle cx="282" cy="208" r="9" fill="#0b0d16"/><path d="M311 216l34 9-32 13z" fill="#fff" opacity=".75"/><path d="M162 310c-28 8-44 24-48 42 36-2 66-10 88-26" fill="url(#metal)" opacity=".8"/><path d="M208 262c20-14 46-18 70-12" stroke="#fff" stroke-opacity=".5" stroke-width="4" fill="none"/></g>
+  <rect x="12" y="12" width="456" height="456" rx="32" fill="none" stroke="url(#edge)" stroke-width="1.5"/>
+  <rect x="22" y="22" width="436" height="436" rx="26" fill="none" stroke="#ffffff" stroke-opacity=".05" stroke-width="1"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#ffffff" opacity=".45">
+    <text x="32" y="450" font-size="10" letter-spacing="3">STREET LEGENDS</text>
+    <text x="448" y="450" font-size="10" letter-spacing="2" text-anchor="end">FLEX / 09</text>
+  </g>
+</svg>

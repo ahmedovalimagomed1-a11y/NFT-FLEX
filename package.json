@@ -1,0 +1,22 @@
+{
+  "name": "nft-flex-miniapp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy",
+    "db:local": "wrangler d1 execute nft-flex --local --file=./migrations/0001_init.sql",
+    "db:remote": "wrangler d1 execute nft-flex --remote --file=./migrations/0001_init.sql",
+    "check": "tsc --noEmit",
+    "art": "node scripts/generate-art.mjs"
+  },
+  "dependencies": {
+    "hono": "^4.7.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261028.1",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.155.0"
+  }
+}

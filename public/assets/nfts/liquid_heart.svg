@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <defs>
+    <radialGradient id="bg" cx="48%" cy="34%" r="80%">
+      <stop offset="0" stop-color="#181a2b"/><stop offset=".55" stop-color="#0c0d17"/><stop offset="1" stop-color="#06070c"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#b46fff" stop-opacity=".55"/><stop offset=".55" stop-color="#b46fff" stop-opacity=".12"/><stop offset="1" stop-color="#b46fff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".28" stop-color="#b46fff"/><stop offset=".62" stop-color="#b46fff" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".7"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".14"/><stop offset="1" stop-color="#ffffff" stop-opacity=".02"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#ffffff" stroke-opacity=".035" stroke-width="1"/>
+    </pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b46fff" stop-opacity=".65"/><stop offset=".5" stop-color="#ffffff" stop-opacity=".12"/><stop offset="1" stop-color="#b46fff" stop-opacity=".3"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="480" rx="38" fill="url(#bg)"/>
+  <rect width="480" height="480" rx="38" fill="url(#grid)"/>
+  <ellipse cx="240" cy="244" rx="205" ry="198" fill="url(#halo)" filter="url(#soft)"/>
+  <ellipse cx="240" cy="385" rx="150" ry="28" fill="#000" opacity=".45" filter="url(#soft)"/>
+  <path d="M26 168 V48 a22 22 0 0 1 22-22 h120 M454 312 v120 a22 22 0 0 1-22 22 H312" fill="none" stroke="url(#edge)" stroke-width="2"/>
+  <circle cx="118" cy="262" r="1" fill="#b46fff" opacity="0.12"/><circle cx="189" cy="309" r="2" fill="#b46fff" opacity="0.2"/><circle cx="260" cy="356" r="3" fill="#b46fff" opacity="0.28"/><circle cx="331" cy="403" r="1" fill="#b46fff" opacity="0.36"/><circle cx="402" cy="95" r="2" fill="#b46fff" opacity="0.12"/><circle cx="69" cy="142" r="3" fill="#b46fff" opacity="0.2"/><circle cx="140" cy="189" r="1" fill="#b46fff" opacity="0.28"/><circle cx="211" cy="236" r="2" fill="#b46fff" opacity="0.36"/><circle cx="282" cy="283" r="3" fill="#b46fff" opacity="0.12"/><circle cx="353" cy="330" r="1" fill="#b46fff" opacity="0.2"/><circle cx="424" cy="377" r="2" fill="#b46fff" opacity="0.28"/><circle cx="91" cy="69" r="3" fill="#b46fff" opacity="0.36"/><circle cx="162" cy="116" r="1" fill="#b46fff" opacity="0.12"/><circle cx="233" cy="163" r="2" fill="#b46fff" opacity="0.2"/><circle cx="304" cy="210" r="3" fill="#b46fff" opacity="0.28"/><circle cx="375" cy="257" r="1" fill="#b46fff" opacity="0.36"/>
+  <g filter="url(#glow)"><path d="M240 342S136 282 136 200c0-38 28-66 62-66 18 0 34 8 42 22 8-14 24-22 42-22 34 0 62 28 62 66 0 82-104 142-104 142z" fill="url(#metal)"/><path d="M172 208c10-44 46-54 68-34" stroke="#fff" stroke-opacity=".55" stroke-width="5" fill="none"/></g>
+  <rect x="12" y="12" width="456" height="456" rx="32" fill="none" stroke="url(#edge)" stroke-width="1.5"/>
+  <rect x="22" y="22" width="436" height="436" rx="26" fill="none" stroke="#ffffff" stroke-opacity=".05" stroke-width="1"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#ffffff" opacity=".45">
+    <text x="32" y="450" font-size="10" letter-spacing="3">NFT FLEX</text>
+    <text x="448" y="450" font-size="10" letter-spacing="2" text-anchor="end">FLEX / 24</text>
+  </g>
+</svg>

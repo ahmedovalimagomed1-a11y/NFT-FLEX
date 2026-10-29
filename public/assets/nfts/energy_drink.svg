@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480" width="480" height="480">
+  <defs>
+    <radialGradient id="bg" cx="48%" cy="34%" r="80%">
+      <stop offset="0" stop-color="#181a2b"/><stop offset=".55" stop-color="#0c0d17"/><stop offset="1" stop-color="#06070c"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#7b8b9e" stop-opacity=".55"/><stop offset=".55" stop-color="#7b8b9e" stop-opacity=".12"/><stop offset="1" stop-color="#7b8b9e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset=".28" stop-color="#7b8b9e"/><stop offset=".62" stop-color="#7b8b9e" stop-opacity=".55"/><stop offset="1" stop-color="#ffffff" stop-opacity=".7"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".14"/><stop offset="1" stop-color="#ffffff" stop-opacity=".02"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#ffffff" stroke-opacity=".035" stroke-width="1"/>
+    </pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7b8b9e" stop-opacity=".65"/><stop offset=".5" stop-color="#ffffff" stop-opacity=".12"/><stop offset="1" stop-color="#7b8b9e" stop-opacity=".3"/>
+    </linearGradient>
+  </defs>
+  <rect width="480" height="480" rx="38" fill="url(#bg)"/>
+  <rect width="480" height="480" rx="38" fill="url(#grid)"/>
+  <ellipse cx="240" cy="244" rx="205" ry="198" fill="url(#halo)" filter="url(#soft)"/>
+  <ellipse cx="240" cy="385" rx="150" ry="28" fill="#000" opacity=".45" filter="url(#soft)"/>
+  <path d="M26 168 V48 a22 22 0 0 1 22-22 h120 M454 312 v120 a22 22 0 0 1-22 22 H312" fill="none" stroke="url(#edge)" stroke-width="2"/>
+  <circle cx="186" cy="267" r="2" fill="#7b8b9e" opacity="0.12"/><circle cx="257" cy="314" r="3" fill="#7b8b9e" opacity="0.2"/><circle cx="328" cy="361" r="1" fill="#7b8b9e" opacity="0.28"/><circle cx="399" cy="408" r="2" fill="#7b8b9e" opacity="0.36"/><circle cx="66" cy="100" r="3" fill="#7b8b9e" opacity="0.12"/><circle cx="137" cy="147" r="1" fill="#7b8b9e" opacity="0.2"/><circle cx="208" cy="194" r="2" fill="#7b8b9e" opacity="0.28"/><circle cx="279" cy="241" r="3" fill="#7b8b9e" opacity="0.36"/><circle cx="350" cy="288" r="1" fill="#7b8b9e" opacity="0.12"/><circle cx="421" cy="335" r="2" fill="#7b8b9e" opacity="0.2"/><circle cx="88" cy="382" r="3" fill="#7b8b9e" opacity="0.28"/><circle cx="159" cy="74" r="1" fill="#7b8b9e" opacity="0.36"/><circle cx="230" cy="121" r="2" fill="#7b8b9e" opacity="0.12"/><circle cx="301" cy="168" r="3" fill="#7b8b9e" opacity="0.2"/><circle cx="372" cy="215" r="1" fill="#7b8b9e" opacity="0.28"/><circle cx="39" cy="262" r="2" fill="#7b8b9e" opacity="0.36"/>
+  <g filter="url(#glow)"><path d="M184 126h112v18l14 24v168c0 20-16 36-36 36h-68c-20 0-36-16-36-36V168l14-24z" fill="url(#metal)"/><ellipse cx="240" cy="126" rx="56" ry="15" fill="#dbe4ee"/><ellipse cx="240" cy="126" rx="42" ry="9" fill="#39434e"/><path d="M194 210h92v108h-92z" fill="#0b0d16" opacity=".3"/><path d="M222 238l36 26-36 26z" fill="#fff" opacity=".8"/><path d="M206 172h68" stroke="#fff" stroke-opacity=".5" stroke-width="3"/></g>
+  <rect x="12" y="12" width="456" height="456" rx="32" fill="none" stroke="url(#edge)" stroke-width="1.5"/>
+  <rect x="22" y="22" width="436" height="436" rx="26" fill="none" stroke="#ffffff" stroke-opacity=".05" stroke-width="1"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#ffffff" opacity=".45">
+    <text x="32" y="450" font-size="10" letter-spacing="3">NFT FLEX</text>
+    <text x="448" y="450" font-size="10" letter-spacing="2" text-anchor="end">FLEX / 04</text>
+  </g>
+</svg>

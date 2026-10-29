@@ -1,0 +1,4 @@
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=nft-flex-webhook-secret
+DEV_AUTH=1
+WEBAPP_URL=http://localhost:8787
