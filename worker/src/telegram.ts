@@ -27,7 +27,7 @@ async function signAuthToken(env: Env, userId: number): Promise<string | null> {
 
 async function appUrl(env: Env, userId?: number): Promise<string> {
   const url = new URL(env.WEBAPP_URL || 'https://nft-flex.workers.dev');
-  url.searchParams.set('v', '5');
+  url.searchParams.set('v', '6');
   const token = userId ? await signAuthToken(env, userId) : null;
   if (token) url.searchParams.set('t', token);
   return url.toString();

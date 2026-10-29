@@ -540,3 +540,53 @@ svg { display: block; }
 }
 .rocket-crash > .icon { width: 64px; height: 64px; margin: 0 auto; }
 .rocket-crash > .icon.success-icon { color: var(--green); }
+
+.nft-level { position: absolute; top: 7px; left: 7px; z-index: 2; padding: 3px 6px; border-radius: 6px; background: rgba(6,8,14,.78); border: 1px solid rgba(255,176,32,.35); color: var(--gold); font-size: 7px; font-weight: 900; letter-spacing: .06em; backdrop-filter: blur(8px); }
+.nft-traits { display: flex; gap: 4px; margin-top: 4px; overflow: hidden; }
+.nft-traits span { padding: 2px 5px; border-radius: 4px; background: rgba(255,255,255,.05); color: var(--muted); font-size: 6.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
+
+.gift-hero { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px 16px; margin-bottom: 22px; border-radius: var(--radius); border: 1px solid rgba(63,167,255,.2); background: radial-gradient(circle at 84% 42%, rgba(63,167,255,.3), transparent 32%), linear-gradient(135deg, #081121, #0b2138 52%, #0e3f66); overflow: hidden; }
+.gift-hero::before { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.05) 50%, transparent 65%); transform: translateX(-100%); animation: gift-shine 5s ease-in-out infinite; }
+@keyframes gift-shine { 0%, 65% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.gift-hero-copy { position: relative; z-index: 1; max-width: 70%; }
+.gift-hero h2 { margin: 5px 0 7px; font-size: 22px; font-weight: 900; line-height: 1; }
+.gift-hero p { color: #a6c8e8; font-size: 9px; line-height: 1.55; max-width: 240px; }
+.gift-hero > img { position: relative; z-index: 1; width: 92px; height: 92px; object-fit: contain; filter: drop-shadow(0 10px 24px rgba(20,120,255,.35)); }
+.gift-hero-stats { display: flex; gap: 11px; margin-top: 12px; }
+.gift-hero-stats span { color: var(--muted); font-size: 7px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.gift-hero-stats b { display: block; color: #fff; font-size: 13px; line-height: 1.2; }
+
+.gift-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gift-catalog-card { display: flex; align-items: center; gap: 9px; padding: 8px; text-align: left; border-radius: 13px; border: 1px solid var(--line); background: var(--panel); overflow: hidden; position: relative; transition: border-color .2s, transform .2s; }
+.gift-catalog-card:active { transform: scale(.98); }
+.gift-catalog-card.owned { border-color: color-mix(in srgb, var(--rarity-color) 45%, transparent); background: linear-gradient(135deg, rgba(255,255,255,.05), var(--panel)); }
+.gift-catalog-card img { width: 52px; height: 52px; flex: 0 0 52px; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,.35)); }
+.gift-catalog-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gift-catalog-body b { font-size: 9px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gift-catalog-body small { color: var(--muted); font-size: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gift-catalog-status { color: var(--rarity-color); font-size: 7px; font-weight: 800; margin-top: 2px; }
+
+.gift-sheet-panel { margin: 13px 0; padding: 12px; border-radius: 14px; border: 1px solid rgba(255,176,32,.2); background: linear-gradient(135deg, rgba(255,176,32,.08), rgba(255,255,255,.02)); }
+.gift-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+.gift-level-badge { padding: 3px 8px; border-radius: 6px; background: rgba(255,176,32,.14); border: 1px solid rgba(255,176,32,.3); color: var(--gold); font-size: 9px; font-weight: 900; }
+.gift-level-track { height: 4px; margin-bottom: 11px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
+.gift-level-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffb020, #ff7849); box-shadow: 0 0 12px rgba(255,176,32,.5); }
+
+.gift-upgrade-preview { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 15px 0; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.025); }
+.gift-upgrade-preview > div { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.gift-upgrade-preview small { color: var(--muted-2); font-size: 7px; font-weight: 800; letter-spacing: .1em; }
+.gift-upgrade-preview b { font-size: 18px; font-weight: 900; }
+.gift-upgrade-preview span { display: flex; align-items: center; gap: 2px; color: var(--gold); font-size: 9px; font-weight: 800; }
+.gift-upgrade-arrow { color: var(--muted-2); }
+.gift-upgrade-arrow .icon { width: 18px; height: 18px; }
+.gift-traits { display: flex; gap: 5px; margin: 11px 0; }
+.trait-chip { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 7px 8px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255,255,255,.025); color: var(--text); font-size: 8px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trait-chip small { color: var(--muted-2); font-size: 6px; font-weight: 800; letter-spacing: .1em; }
+.gift-result-badge { width: max-content; margin: 12px auto 0; padding: 5px 13px; border-radius: 99px; background: rgba(255,176,32,.13); border: 1px solid rgba(255,176,32,.35); color: var(--gold); font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+.gift-source-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.gift-source-list .chip { display: inline-flex; align-items: center; gap: 4px; }
+.gift-source-list .icon { width: 13px; height: 13px; }
+
+.auth-debug { position: fixed; left: 8px; bottom: calc(76px + var(--safe-bottom)); z-index: 60; max-width: calc(100vw - 16px); padding: 4px 7px; border-radius: 6px; background: rgba(0,0,0,.65); color: #7de3b0; font: 7px/1.35 ui-monospace, monospace; pointer-events: none; opacity: .75; }
+
+@media (min-width: 520px) { .gift-catalog { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

@@ -59,6 +59,7 @@ export function safeUser(user: UserRow) {
       gamesWon: user.games_won,
       upgradesWon: user.upgrades_won,
       upgradesLost: user.upgrades_lost,
+      giftUpgrades: user.gift_upgrades,
       rocketFlights: user.rocket_flights,
       rocketCashed: user.rocket_cashed,
       marketSales: user.market_sales,
@@ -125,6 +126,10 @@ export function inventoryView(row: Record<string, unknown>) {
     status: String(row.status),
     favorite: Boolean(row.favorite),
     source: String(row.source),
+    giftLevel: Number(row.gift_level ?? 1),
+    giftModel: row.gift_model ? String(row.gift_model) : null,
+    giftBackdrop: row.gift_backdrop ? String(row.gift_backdrop) : null,
+    giftSymbol: row.gift_symbol ? String(row.gift_symbol) : null,
     createdAt: Number(row.created_at),
     ownerId: Number(row.tg_id),
   };

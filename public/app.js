@@ -36,6 +36,7 @@ const state = {
   marketTab: 'market',
   inventoryFilter: 'all',
   inventorySort: 'value',
+  giftFilter: 'all',
   upgradeStakes: [],
   upgradeTarget: null,
   activeRocket: null,
@@ -108,17 +109,28 @@ function avatar(user, className = '') {
 function nftCard(item, options = {}) {
   const rarity = rarityOf(item);
   const fromMarket = options.market;
+  const gift = item.item.gift;
   return `<button class="nft-card rarity-${item.item.rarity}" data-rarity="${item.item.rarity}" data-action="${fromMarket ? 'market-item' : 'item-sheet'}" data-id="${esc(item.id)}" style="--rarity-color:${rarity.color}">
     <div class="nft-art-wrap">
       <img class="nft-art" src="${esc(item.item.art)}" alt="${esc(item.item.name)}" loading="lazy">
       ${!fromMarket ? `<span class="nft-fav ${item.favorite ? 'on' : ''}" data-action="favorite" data-id="${esc(item.id)}">${icon('heart')}</span>` : ''}
+      ${gift ? `<span class="nft-level">LVL ${item.giftLevel || 1}</span>` : ''}
     </div>
     <div class="nft-meta">
       <div class="nft-name">${esc(item.item.name)}</div>
       <div class="nft-sub"><span class="nft-rarity">${rarity.label}</span><span class="nft-value">${icon('star')}${fmt(item.value)}</span></div>
-      <div class="nft-collection">${esc(item.item.collection)} / #${esc(item.serial)}</div>
+      <div class="nft-collection">${gift ? esc(item.giftModel || 'Classic') + ' · ' : ''}${esc(item.item.collection)} / #${esc(item.serial)}</div>
+      ${gift ? `<div class="nft-traits"><span>${esc(item.giftBackdrop || '—')}</span><span>${esc(item.giftSymbol || '—')}</span></div>` : ''}
     </div>
   </button>`;
+}
+
+function giftUpgradeCost(value) {
+  return Math.max(120, Math.round(Number(value) * 0.28));
+}
+
+function giftNextValue(value) {
+  return Math.round(Number(value) * 1.2);
 }
 
 function emptyState(iconName, title, text, action = '') {
@@ -277,7 +289,7 @@ async function boot() {
     }
     const data = await api('/bootstrap');
     state.data = data;
-    state.upgradeTarget ||= data.catalog.find((item) => item.key === 'moon_rock') || data.catalog[0];
+    state.upgradeTarget ||= data.catalog.find((item) => item.key === 'durov_cap_classic') || data.catalog[0];
     await sleep(650);
     $('#splash').classList.add('gone');
     $('#app').removeAttribute('hidden');
@@ -313,7 +325,7 @@ async function refresh(silent = true, rerender = true) {
   try {
     const data = await api('/bootstrap');
     state.data = data;
-    if (!state.upgradeTarget) state.upgradeTarget = data.catalog.find((item) => item.key === 'moon_rock') || data.catalog[0];
+    if (!state.upgradeTarget) state.upgradeTarget = data.catalog.find((item) => item.key === 'durov_cap_classic') || data.catalog[0];
     state.upgradeStakes = state.upgradeStakes.filter((id) => data.inventory.some((item) => item.id === id));
     updateTopbar();
     if (rerender) renderRoute();
@@ -335,6 +347,7 @@ function renderRoute() {
   const routes = {
     cases: renderCases,
     inventory: renderInventory,
+    gifts: renderGifts,
     upgrade: renderUpgrade,
     games: renderGames,
     market: renderMarket,
@@ -393,10 +406,124 @@ function renderCases() {
     </div></div>` : `<div class="panel" style="padding:18px;text-align:center;color:var(--muted);font-size:10px">Стань первым, кто откроет кейс сегодня.</div>`}
     <div class="section-head"><h2>Быстрый старт</h2></div>
     <div class="game-card-grid">
+      <button class="game-card" data-route="gifts" style="--game-color:var(--blue);--game-glow:rgba(63,167,255,.25)">${icon('gift')}<h3>Подарки</h3><p>Кепки Дурова, очки и улучшения</p><span class="go">${icon('arrow')}</span></button>
       <button class="game-card" data-route="inventory" style="--game-color:var(--cyan);--game-glow:rgba(34,211,238,.25)">${icon('layers')}<h3>Коллекция</h3><p>Все твои NFT в одном месте</p><span class="go">${icon('arrow')}</span></button>
       <button class="game-card" data-route="upgrade" style="--game-color:var(--violet);--game-glow:rgba(139,92,246,.25)">${icon('upgrade')}<h3>Апгрейдер</h3><p>Обменяй до 5 NFT на одну цель</p><span class="go">${icon('arrow')}</span></button>
     </div>
   </section>`;
+}
+
+function renderGifts() {
+  const data = state.data;
+  const gifts = data.inventory.filter((item) => item.item.gift);
+  const total = gifts.reduce((sum, item) => sum + item.value, 0);
+  const catalog = data.catalog.filter((item) => item.gift);
+  const collections = ['all', ...new Set(catalog.map((item) => item.collection))];
+  const visible = catalog.filter((item) => state.giftFilter === 'all' || item.collection === state.giftFilter);
+  const ownedByKey = new Map(gifts.map((item) => [item.itemKey, item]));
+  const ownedCollections = new Set(gifts.map((item) => item.item.collection));
+  return `<section class="page">
+    ${pageHead('GIFT LAB / 03', 'Подарки Telegram', 'Кепки и очки Дурова, Plush Pepe, Heart Locket и другие коллекционные подарки. Улучшай уровень, меняй фон и узор, поднимай стоимость.', fmt(total), 'стоимость')}
+    <div class="gift-hero">
+      <div class="gift-hero-copy">
+        <span class="eyebrow">DUROV COLLECTION</span>
+        <h2>Улучшай подарки</h2>
+        <p>Каждый подарок имеет модель, фон и узор. Каждый уровень повышает ценность и может открыть новые детали.</p>
+        <div class="gift-hero-stats"><span><b>${gifts.length}</b> моих</span><span><b>${catalog.length}</b> моделей</span><span><b>${ownedCollections.size}</b> коллекций</span></div>
+      </div>
+      <img src="/assets/nfts/durov_cap_classic.svg" alt="Durov's Cap">
+    </div>
+    <div class="section-head"><h2>Мои подарки</h2><span class="link">${gifts.length} шт</span></div>
+    ${gifts.length ? `<div class="nft-grid">${gifts.map((item) => nftCard(item)).join('')}</div>` : emptyState('gift', 'Подарков пока нет', 'Открой «Кейс Дурова» или «Кейс Telegram», чтобы получить первый коллекционный подарок.', `<button class="btn btn-primary btn-sm" style="margin-top:14px" data-route="cases">К кейсам</button>`)}
+    <div class="section-head"><h2>Каталог подарков</h2><span class="link">${visible.length} моделей</span></div>
+    <div class="chip-row" style="margin-bottom:12px">
+      ${collections.map((key) => `<button class="chip-btn ${state.giftFilter === key ? 'active' : ''}" data-action="gift-filter" data-value="${key}">${key === 'all' ? 'Все' : esc(key)}</button>`).join('')}
+    </div>
+    <div class="gift-catalog">
+      ${visible.map((item) => {
+        const owned = ownedByKey.get(item.key);
+        return `<button class="gift-catalog-card rarity-${item.rarity} ${owned ? 'owned' : ''}" data-action="gift-info" data-key="${item.key}" style="--rarity-color:${RARITY[item.rarity].color}">
+          <img src="${item.art}" alt="${esc(item.name)}" loading="lazy">
+          <span class="gift-catalog-body"><b>${esc(item.name)}</b><small>${esc(item.collection)} · ${esc(item.model)}</small><span class="gift-catalog-status">${owned ? `LVL ${owned.giftLevel} · ${fmt(owned.value)}` : 'Выпадает из кейсов'}</span></span>
+        </button>`;
+      }).join('')}
+    </div>
+    <p class="upgrade-note" style="text-align:center;margin-top:18px">Подарки вдохновлены коллекциями Telegram Gifts: Durov's Cap, Durov's Glasses, Plush Pepe и другими.</p>
+  </section>`;
+}
+
+function showGiftInfo(key) {
+  const item = state.data.catalog.find((entry) => entry.key === key);
+  if (!item) return;
+  const owned = state.data.inventory.find((entry) => entry.itemKey === key);
+  const cases = state.data.cases.filter((entry) => entry.pool.some((slot) => slot.itemKey === key));
+  openSheet(`${modalHead('Подарок Telegram', esc(item.name))}
+    <div class="modal-body">
+      <img class="item-sheet-art" src="${item.art}" alt="${esc(item.name)}">
+      <div class="item-sheet-head"><div><h2>${esc(item.name)}</h2><p style="color:${RARITY[item.rarity].color}">${RARITY[item.rarity].label} / ${esc(item.collection)}</p></div><div class="item-sheet-price"><b>${icon('star')}${fmt(item.value)}</b><small>БАЗА</small></div></div>
+      <p class="item-desc">${esc(item.description)}</p>
+      <div class="item-facts"><div class="fact"><small>МОДЕЛЬ</small><b>${esc(item.model)}</b></div><div class="fact"><small>УРОВЕНЬ</small><b>${owned ? 'LVL ' + owned.giftLevel : '—'}</b></div><div class="fact"><small>В КЕЙСАХ</small><b>${cases.length}</b></div></div>
+      ${cases.length ? `<div class="gift-source-list">${cases.map((entry) => `<span class="chip">${icon('box')} ${esc(entry.name)}</span>`).join('')}</div>` : ''}
+      ${owned ? `<button class="btn btn-gold btn-block" style="margin-top:14px" data-action="item-sheet" data-id="${owned.id}">${icon('gift')} ОТКРЫТЬ МОЙ ПОДАРОК</button>` : `<p class="hint" style="text-align:center;margin-top:12px">Этот подарок можно получить из кейсов выше.</p>`}
+    </div>`);
+}
+
+function showGiftUpgrade(itemId) {
+  const item = state.data.inventory.find((entry) => entry.id === itemId);
+  if (!item || !item.item.gift) return;
+  const level = item.giftLevel || 1;
+  const maxed = level >= 10;
+  const cost = giftUpgradeCost(item.value);
+  const next = giftNextValue(item.value);
+  const canAfford = state.data.user.stars >= cost;
+  closeModal();
+  openSheet(`${modalHead('Улучшение подарка', esc(item.item.name))}
+    <div class="modal-body">
+      <img class="item-sheet-art" src="${item.item.art}" alt="${esc(item.item.name)}">
+      <div class="gift-upgrade-preview">
+        <div><small>СЕЙЧАС</small><b>LVL ${level}</b><span>${icon('star')}${fmt(item.value)}</span></div>
+        <span class="gift-upgrade-arrow">${icon('arrow')}</span>
+        <div><small>ПОСЛЕ</small><b>LVL ${Math.min(10, level + 1)}</b><span>${icon('star')}${fmt(next)}</span></div>
+      </div>
+      <div class="gift-traits">
+        <span class="trait-chip"><small>МОДЕЛЬ</small>${esc(item.giftModel || item.item.model)}</span>
+        <span class="trait-chip"><small>ФОН</small>${esc(item.giftBackdrop || '—')}</span>
+        <span class="trait-chip"><small>УЗОР</small>${esc(item.giftSymbol || '—')}</span>
+      </div>
+      <p class="hint" style="text-align:center">${maxed ? 'Подарок уже максимального уровня.' : 'При улучшении фон или узор могут измениться. Стоимость подарка вырастет на ' + fmt(next - item.value) + ' звёзд.'}</p>
+      <button class="btn ${maxed ? 'btn-ghost' : 'btn-gold'} btn-block" data-action="confirm-gift-upgrade" data-id="${item.id}" ${maxed || !canAfford ? 'disabled' : ''}>${maxed ? 'МАКСИМАЛЬНЫЙ УРОВЕНЬ' : `${icon('upgrade')} УЛУЧШИТЬ · ${fmt(cost)} ЗВЁЗД`}</button>
+      ${!maxed && !canAfford ? '<p class="hint" style="text-align:center;color:var(--red);margin-top:8px">Недостаточно звёзд</p>' : ''}
+    </div>`);
+}
+
+async function confirmGiftUpgrade(itemId) {
+  const item = state.data.inventory.find((entry) => entry.id === itemId);
+  if (!item) return;
+  try {
+    const result = await api('/gifts/upgrade', { method: 'POST', body: { itemId } });
+    const index = state.data.inventory.findIndex((entry) => entry.id === itemId);
+    if (index >= 0) state.data.inventory[index] = result.item;
+    state.data.user.stars -= result.cost;
+    updateTopbar();
+    haptic('success');
+    tone(660, 0.1);
+    openSheet(`${modalHead('Подарок улучшен', esc(result.item.item.name))}
+      <div class="modal-body">
+        <img class="item-sheet-art" src="${result.item.item.art}" alt="">
+        <div class="gift-result-badge">LVL ${result.level}</div>
+        <h2 style="text-align:center;margin-top:4px">${esc(result.item.item.name)}</h2>
+        <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:5px">Стоимость выросла на ${fmt(result.valueGain)} звёзд</p>
+        <div class="gift-traits" style="margin-top:14px">
+          <span class="trait-chip"><small>МОДЕЛЬ</small>${esc(result.item.giftModel || result.item.item.model)}</span>
+          <span class="trait-chip"><small>ФОН</small>${esc(result.item.giftBackdrop || '—')}</span>
+          <span class="trait-chip"><small>УЗОР</small>${esc(result.item.giftSymbol || '—')}</span>
+        </div>
+        <button class="btn btn-primary btn-block" style="margin-top:16px" data-action="close-modal">ГОТОВО</button>
+      </div>`);
+    renderRoute();
+  } catch (error) {
+    toast(error.message, 'error');
+  }
 }
 
 function renderInventory() {
@@ -564,6 +691,7 @@ function renderProfile() {
     auction_sale: ['Аукцион', 'gavel'],
     auction_buyout: ['Выкуп', 'bolt'],
     admin_grant: ['Начисление', 'shield'],
+    gift_upgrade: ['Улучшение подарка', 'gift'],
   };
   return `<section class="page">
     ${pageHead('PROFILE / 06', 'Профиль', 'Твоя статистика, уровень, достижения и место среди игроков.', fmt(netWorth), 'капитал')}
@@ -594,6 +722,7 @@ function renderProfile() {
       <div class="stat-box"><small>Игры 50/50</small><b>${fmt(user.stats.gamesWon)} / ${fmt(user.stats.gamesPlayed)}</b></div>
       <div class="stat-box"><small>Ракета</small><b>${fmt(user.stats.rocketCashed)} / ${fmt(user.stats.rocketFlights)}</b></div>
       <div class="stat-box"><small>Сделки</small><b>${fmt(user.stats.marketSales + user.stats.marketPurchases)}</b></div>
+      <div class="stat-box"><small>Улучшено подарков</small><b>${fmt(user.stats.giftUpgrades || 0)}</b></div>
     </div>
     <div class="section-head"><h2>Достижения</h2><span class="link">${unlocked}/${achievements.length}</span></div>
     <div class="ach-grid">${achievements.map((achievement) => `<div class="ach ${achievement.unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${icon(achievement.icon)}</span><span><b>${esc(achievement.name)}</b><small>${esc(achievement.description)}</small></span></div>`).join('')}</div>
@@ -744,7 +873,13 @@ function showItemSheet(itemId) {
       <div class="item-sheet-head"><div><h2>${esc(item.item.name)}</h2><p class="rarity-${item.item.rarity}" style="color:${rarity.color}">${rarity.label} / ${esc(item.item.collection)}</p></div><div class="item-sheet-price"><b>${icon('star')}${fmt(item.value)}</b><small>ОЦЕНКА</small></div></div>
       <p class="item-desc">${esc(item.item.description)}</p>
       <div class="item-facts"><div class="fact"><small>СЕРИЯ</small><b>#${esc(item.serial)}</b></div><div class="fact"><small>ИСТОЧНИК</small><b>${esc(item.source.startsWith('case:') ? 'Кейс' : item.source === 'daily' ? 'Бонус' : 'Игра')}</b></div><div class="fact"><small>В КОЛЛЕКЦИИ</small><b>${item.favorite ? 'Избранное' : 'Актив'}</b></div></div>
+      ${item.item.gift ? `<div class="gift-sheet-panel">
+        <div class="gift-sheet-head"><span class="gift-level-badge">LVL ${item.giftLevel || 1}</span><span class="tiny muted">${esc(item.item.model)} · ${esc(item.giftBackdrop || '—')} · ${esc(item.giftSymbol || '—')}</span></div>
+        <div class="gift-level-track"><span style="width:${Math.round(((item.giftLevel || 1) / 10) * 100)}%"></span></div>
+        <button class="btn btn-gold btn-block btn-sm" data-action="gift-upgrade" data-id="${item.id}" ${(item.giftLevel || 1) >= 10 ? 'disabled' : ''}>${icon('upgrade')} ${(item.giftLevel || 1) >= 10 ? 'МАКСИМАЛЬНЫЙ УРОВЕНЬ' : 'УЛУЧШИТЬ · ' + fmt(giftUpgradeCost(item.value)) + ' ЗВЁЗД'}</button>
+      </div>` : ''}
       <div class="item-actions">
+        ${item.item.gift ? `<button class="btn btn-gold" data-action="gift-upgrade" data-id="${item.id}">${icon('gift')} Улучшить подарок</button>` : ''}
         <button class="btn ${item.favorite ? 'btn-soft' : 'btn-ghost'}" data-action="favorite" data-id="${item.id}">${icon('heart')} ${item.favorite ? 'В избранном' : 'В избранное'}</button>
         <button class="btn btn-ghost" data-action="item-upgrade" data-id="${item.id}">${icon('upgrade')} В апгрейд</button>
         <button class="btn btn-ghost" data-action="item-rocket" data-id="${item.id}">${icon('rocket')} Ракета</button>
@@ -1188,6 +1323,10 @@ function handleAction(action, el) {
     case 'close-reveal': closeReveal(); break;
     case 'case-again': closeReveal(); setTimeout(() => openCase(el.dataset.case, Number(el.dataset.count)), 340); break;
     case 'item-sheet': showItemSheet(id); break;
+    case 'gift-info': showGiftInfo(el.dataset.key); break;
+    case 'gift-filter': state.giftFilter = el.dataset.value; renderRoute(); break;
+    case 'gift-upgrade': showGiftUpgrade(id); break;
+    case 'confirm-gift-upgrade': confirmGiftUpgrade(id); break;
     case 'favorite': toggleFavorite(id); break;
     case 'inv-filter': state.inventoryFilter = el.dataset.value; renderRoute(); break;
     case 'inv-sort': state.inventorySort = el.dataset.value; renderRoute(); break;

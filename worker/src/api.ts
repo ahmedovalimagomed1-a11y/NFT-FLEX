@@ -1,6 +1,19 @@
 import { Hono } from 'hono';
 import type { Context } from 'hono';
-import { ACHIEVEMENTS, CASES, CASE_BY_KEY, ITEMS, ITEM_BY_KEY, RARITIES, type CaseDef, type NftItem } from './catalog';
+import {
+  ACHIEVEMENTS,
+  CASES,
+  CASE_BY_KEY,
+  GIFT_MAX_LEVEL,
+  GIFT_TRAITS,
+  ITEMS,
+  ITEM_BY_KEY,
+  RARITIES,
+  giftNextValue,
+  giftUpgradeCost,
+  type CaseDef,
+  type NftItem,
+} from './catalog';
 import { diagnoseInitData, isAdminId, requireAuth } from './auth';
 import type { AppEnv, AuctionRow, InventoryRow, ListingRow, RocketRow, UserRow } from './types';
 import {
@@ -89,6 +102,18 @@ function itemValue(base: number): number {
   return Math.max(1, Math.round(base * (0.92 + randomFloat() * 0.16)));
 }
 
+function pickTrait(list: string[]): string {
+  return list[randomInt(0, Math.max(0, list.length - 1))] ?? 'Classic';
+}
+
+function giftTraits(item: NftItem) {
+  return {
+    model: item.model || 'Classic',
+    backdrop: pickTrait(GIFT_TRAITS.backdrops),
+    symbol: pickTrait(GIFT_TRAITS.symbols),
+  };
+}
+
 function dropXp(rarity: string): number {
   if (rarity === 'mythic') return 80;
   if (rarity === 'legendary') return 50;
@@ -127,6 +152,7 @@ function achievementsFor(user: UserRow, inventoryCount: number) {
     first_drop: user.total_opened >= 1,
     collector: inventoryCount >= 5,
     upgrader: user.upgrades_won >= 1,
+    gift_master: user.gift_upgrades >= 1,
     risk_taker: user.games_played >= 5,
     rocket_man: user.rocket_cashed >= 1,
     trader: user.market_sales + user.market_purchases >= 1,
@@ -149,6 +175,7 @@ async function insertItem(
   value = itemValue(item.value),
 ): Promise<InventoryRow> {
   const time = now();
+  const traits = giftTraits(item);
   const row: InventoryRow = {
     id: uid('nft'),
     tg_id: tgId,
@@ -158,15 +185,31 @@ async function insertItem(
     status: 'inventory',
     favorite: 0,
     source,
+    gift_level: 1,
+    gift_model: traits.model,
+    gift_backdrop: traits.backdrop,
+    gift_symbol: traits.symbol,
     created_at: time,
     updated_at: time,
   };
   await db
     .prepare(
-      `INSERT INTO inventory (id, tg_id, item_key, value, serial, status, favorite, source, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'inventory', 0, ?, ?, ?)`,
+      `INSERT INTO inventory (id, tg_id, item_key, value, serial, status, favorite, source, gift_level, gift_model, gift_backdrop, gift_symbol, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'inventory', 0, ?, 1, ?, ?, ?, ?, ?)`,
     )
-    .bind(row.id, row.tg_id, row.item_key, row.value, row.serial, row.source, row.created_at, row.updated_at)
+    .bind(
+      row.id,
+      row.tg_id,
+      row.item_key,
+      row.value,
+      row.serial,
+      row.source,
+      row.gift_model,
+      row.gift_backdrop,
+      row.gift_symbol,
+      row.created_at,
+      row.updated_at,
+    )
     .run();
   return row;
 }
@@ -606,6 +649,70 @@ api.post('/upgrade', async (c) => {
       target,
       newItem,
       roll: Math.round(randomFloat() * 1000) / 1000,
+    },
+  });
+});
+
+api.post('/gifts/upgrade', async (c) => {
+  const body = await readJson<{ itemId?: string }>(c.req.raw);
+  const user = c.get('dbUser');
+  const row = await c.env.DB.prepare(
+    "SELECT * FROM inventory WHERE id = ? AND tg_id = ? AND status = 'inventory'",
+  )
+    .bind(body?.itemId ?? '', user.tg_id)
+    .first<InventoryRow>();
+  if (!row) return c.json({ ok: false, error: 'ITEM_NOT_AVAILABLE', message: 'Подарок не найден' }, 400);
+  const item = itemFor(row.item_key);
+  if (!item?.gift) return c.json({ ok: false, error: 'NOT_A_GIFT', message: 'Это не подарок' }, 400);
+  const level = Number(row.gift_level ?? 1);
+  if (level >= GIFT_MAX_LEVEL) {
+    return c.json({ ok: false, error: 'MAX_LEVEL', message: 'Подарок уже максимального уровня' }, 400);
+  }
+  const cost = giftUpgradeCost(Number(row.value));
+  if (user.stars < cost) {
+    return c.json({ ok: false, error: 'INSUFFICIENT_STARS', message: `Нужно ${cost} звёзд` }, 400);
+  }
+  const nextLevel = level + 1;
+  const nextValue = giftNextValue(Number(row.value));
+  const backdrop = level % 2 === 0 ? pickTrait(GIFT_TRAITS.backdrops) : row.gift_backdrop || pickTrait(GIFT_TRAITS.backdrops);
+  const symbol = nextLevel % 2 === 0 ? pickTrait(GIFT_TRAITS.symbols) : row.gift_symbol || pickTrait(GIFT_TRAITS.symbols);
+  const time = now();
+  await c.env.DB.batch([
+    c.env.DB.prepare(
+      'UPDATE users SET stars = stars - ?, xp = xp + 30, gift_upgrades = gift_upgrades + 1, last_seen = ? WHERE tg_id = ?',
+    ).bind(cost, time, user.tg_id),
+    c.env.DB.prepare(
+      'UPDATE inventory SET value = ?, gift_level = ?, gift_model = ?, gift_backdrop = ?, gift_symbol = ?, updated_at = ? WHERE id = ? AND status = ?',
+    ).bind(nextValue, nextLevel, item.model || row.gift_model || 'Classic', backdrop, symbol, time, row.id, 'inventory'),
+    transaction(c.env.DB, user.tg_id, 'gift_upgrade', -cost, {
+      itemId: row.id,
+      itemKey: row.item_key,
+      level: nextLevel,
+    }),
+    logEvent(c.env.DB, user.tg_id, 'gift_upgrade', {
+      itemId: row.id,
+      itemKey: row.item_key,
+      from: level,
+      to: nextLevel,
+      cost,
+    }),
+  ]);
+  return c.json({
+    ok: true,
+    data: {
+      item: mapItem({
+        ...row,
+        value: nextValue,
+        gift_level: nextLevel,
+        gift_model: item.model || row.gift_model || 'Classic',
+        gift_backdrop: backdrop,
+        gift_symbol: symbol,
+      }),
+      cost,
+      level: nextLevel,
+      maxLevel: GIFT_MAX_LEVEL,
+      nextCost: giftUpgradeCost(nextValue),
+      valueGain: nextValue - Number(row.value),
     },
   });
 });

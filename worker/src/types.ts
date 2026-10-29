@@ -39,6 +39,7 @@ export interface UserRow {
   games_won: number;
   upgrades_won: number;
   upgrades_lost: number;
+  gift_upgrades: number;
   rocket_flights: number;
   rocket_cashed: number;
   market_sales: number;
@@ -56,6 +57,10 @@ export interface InventoryRow {
   status: string;
   favorite: number;
   source: string;
+  gift_level: number;
+  gift_model: string | null;
+  gift_backdrop: string | null;
+  gift_symbol: string | null;
   created_at: number;
   updated_at: number;
 }
