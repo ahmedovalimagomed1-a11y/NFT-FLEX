@@ -6,7 +6,7 @@ const telegram = new Hono<Bindings>();
 
 function appUrl(env: Env): string {
   const url = new URL(env.WEBAPP_URL || 'https://nft-flex.workers.dev');
-  url.searchParams.set('v', '3');
+  url.searchParams.set('v', '4');
   return url.toString();
 }
 
