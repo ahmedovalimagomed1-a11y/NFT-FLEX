@@ -1,4 +1,7 @@
 const tg = window.Telegram?.WebApp;
+const launchHash = new URLSearchParams(location.hash.slice(1));
+const telegramInitData = tg?.initData || launchHash.get('tgWebAppData') || sessionStorage.getItem('nftflex_init_data') || '';
+try { if (telegramInitData) sessionStorage.setItem('nftflex_init_data', telegramInitData); } catch {}
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -26,7 +29,7 @@ const ICON_LABELS = {
 
 const state = {
   data: null,
-  route: location.hash.replace('#', '') || 'cases',
+  route: launchHash.has('tgWebAppData') ? 'cases' : location.hash.replace('#', '') || 'cases',
   marketTab: 'market',
   inventoryFilter: 'all',
   inventorySort: 'value',
@@ -174,7 +177,7 @@ function burst(x, y, color = '#8b5cf6', count = 14) {
 
 function authHeaders() {
   const headers = { 'content-type': 'application/json' };
-  if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+  if (telegramInitData) headers['X-Telegram-Init-Data'] = telegramInitData;
   if (state.devUser) headers['X-Dev-User'] = state.devUser;
   return headers;
 }
@@ -233,7 +236,7 @@ async function boot() {
   initTelegram();
   $('#splash-status').textContent = 'Синхронизируем коллекцию';
   try {
-    if (!tg?.initData && !state.devUser) {
+    if (!telegramInitData && !state.devUser) {
       await sleep(500);
       showAuth();
       return;

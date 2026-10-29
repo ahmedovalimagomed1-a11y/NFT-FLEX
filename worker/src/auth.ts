@@ -41,7 +41,7 @@ export async function verifyInitData(initData: string, botToken: string): Promis
   if (Date.now() / 1000 - authDate > 60 * 60 * 24 * 2) return null;
 
   const dataCheckString = Array.from(params.entries())
-    .filter(([key]) => key !== 'hash' && key !== 'signature')
+    .filter(([key]) => key !== 'hash')
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
